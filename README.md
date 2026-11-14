@@ -1,23 +1,32 @@
-# So-thing
+# Cork7
 
-A polished static web project for Cork7, built to run directly in the browser without a package install or build pipeline.
+Cork7 is a static browser game. Its HTML, styles, JavaScript bundles, and game assets are served directly; there is no package installation or build step in this repository.
 
-## Overview
+## Run locally
 
-This repository contains the front-end assets for the Cork7 experience:
+In VS Code, press **F5** and choose **Launch Cork7**. Or start a static server from the repository root:
 
+```bash
+python3 -m http.server 8000 --bind 0.0.0.0
+```
 
-- This project is served as a static site.
-- There is no Node package install or app build step required for local development.
-- Keep `_next/static/` when copying or deploying the site; the client runtime loads chunks and styles from those paths.
-- Keep `models/`, `grabs/`, `images/mountain-map/`, and the Meshopt decoder in `js/`; the 3D scene, rider animations, and responsive map need them.
-- If assets are missing or a browser shows an empty startup image, the bundled fallback onboarding folder ensures the page still loads correctly.
-- Guest accounts save the rider name and progress on the current device only. They do not sync across devices and can be lost if the browser's site data is cleared; online account features still require signing in.
-- Signed-in email/password accounts can change their password from **Settings → Account** by confirming their current password; this does not require checking email. If a user is locked out and has forgotten their password, recovery still requires access to the account email for verification. Configure the Supabase Auth **Reset Password** email template to show `{{ .Token }}` as a code so users can enter it in the in-app recovery form without opening a link.
+Open [http://localhost:8000](http://localhost:8000). In Codespaces, forward port `8000` from the **Ports** tab and open its forwarded URL. If the port is busy, run `python3 -m http.server 8001 --bind 0.0.0.0` and open `http://localhost:8001`.
 
-## Troubleshooting
+## Music in the game
 
-- If the page does not load, confirm that the local HTTP server is still running.
-- If port `8000` is already serving another project, stop that server before launching Cork7.
-- If port `8000` is busy, use port `8001` as shown above.
-- If the browser is blank or some art is missing, refresh the page after ensuring the static server is serving the project root.
+Open the Pocket from the music/chat control in the game, choose a music service, and paste a YouTube, YouTube Music, Spotify, or SoundCloud song or playlist link. The service's official embedded player plays it in the Pocket, so Cork7 does not need local soundtrack files or API keys. Playback, sign-in, and availability are controlled by each service. The selected link is saved in the current browser.
+
+## Publishing in-game updates
+
+The in-game **Updates** tab is a bundled release-notes list, not a live feed from social media or a posting form. When releasing a change, add or revise a patch-note entry in `js/patch-notes-vb5RXYXa.js` and keep the matching `_next/static/chunks/patch-notes-vb5RXYXa.js` copy in sync. Describe what players can actually see in the released game.
+
+## Project files
+
+- `index.html` — static app entry point
+- `js/` and `_next/static/` — runtime bundles
+- `css/` — stylesheets
+- `images/`, `onboarding/`, `models/`, and `grabs/` — visual, course, and rider assets
+
+Keep both runtime asset trees and the referenced game assets when copying or deploying the site. Guest progress is stored on the current device; account and online features require their configured backend.
+
+Signed-in users can change a password from **Settings → Account** by confirming the current password. Password recovery requires access to the account email; configure the Supabase Auth reset email template to show `{{ .Token }}` as a code for the in-game recovery form.
