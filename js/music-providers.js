@@ -18,14 +18,17 @@
   const styles = document.createElement("style");
   styles.textContent = `
     .music-player.c7mp-service-player.is-music .pocket-screen{height:360px!important}
+    .music-player.c7mp-service-player.is-music .pocket-screen.is-spotify-playlist{height:560px!important}
     .music-player.c7mp-service-player .pocket-device{max-height:calc(100dvh - 40px)}
     .music-player.c7mp-service-player.is-music .pocket-screen>:not(.pocket-top):not(.c7mp-panel){display:none!important}
     .music-player.c7mp-service-player.is-music .pocket-wheel,
     .music-player.c7mp-service-player .music-tray,
     .music-player.c7mp-service-player .music-error,
     .game-menu-music{display:none!important}
-    .c7mp-panel{position:absolute;inset:43px 0 0;z-index:20;display:flex;flex-direction:column;gap:7px;padding:8px 10px 10px;background:#101114;color:#f5f5f7;font:12px/1.35 var(--pk-font);box-sizing:border-box}
-    .c7mp-panel[hidden],.music-player:not(.is-music) .c7mp-panel{display:none!important}
+    .c7mp-panel{position:absolute;inset:43px 0 0;z-index:20;display:flex;flex-direction:column;gap:7px;padding:8px 10px 10px;background:#101114;color:#f5f5f7;font:12px/1.35 var(--pk-font);box-sizing:border-box;overflow-y:auto}
+    .c7mp-panel[hidden]{display:none!important}
+    .c7mp-panel.is-detached{position:fixed;inset:0 auto auto -10000px;width:320px;height:352px;padding:0;gap:0;opacity:.01;overflow:hidden;pointer-events:none}
+    .c7mp-panel.is-detached .c7mp-header,.c7mp-panel.is-detached form,.c7mp-panel.is-detached .c7mp-status,.c7mp-panel.is-detached .c7mp-external{display:none!important}
     .c7mp-header{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:700}
     .c7mp-panel select,.c7mp-panel input{height:30px;min-width:0;border:1px solid #ffffff24;border-radius:7px;padding:0 8px;background:#25262a;color:#fff;font:inherit;box-sizing:border-box}
     .c7mp-row{display:flex;gap:6px}
@@ -37,11 +40,14 @@
     .c7mp-status{min-height:14px;color:#ebebf5b0;font-size:10px}
     .c7mp-status.is-error{color:#ff8c84}
     .c7mp-frame-wrap{min-height:90px;flex:1;overflow:hidden;border-radius:8px;background:#18191c}
+    .c7mp-frame-wrap.is-spotify-playlist{min-height:352px;flex:none}
+    .c7mp-panel.is-detached .c7mp-frame-wrap{position:absolute;inset:0;min-height:0}
     .c7mp-frame{width:100%;height:100%;min-height:90px;border:0;display:block}
+    .c7mp-panel.is-detached .c7mp-frame{min-height:0}
     .c7mp-placeholder{height:100%;min-height:90px;display:grid;place-items:center;padding:10px;box-sizing:border-box;text-align:center;color:#ebebf599}
     .c7mp-external{color:#ffb18e;font-size:10px;text-decoration:none}
     .c7mp-external:hover{text-decoration:underline}
-    @media(max-height:500px){.music-player.c7mp-service-player.is-music .pocket-screen{height:min(360px,calc(100dvh - 120px))!important}.music-player.c7mp-service-player .pocket-device{max-height:calc(100dvh - 24px)}}
+    @media(max-height:620px){.music-player.c7mp-service-player.is-music .pocket-screen{height:min(360px,calc(100dvh - 120px))!important}.music-player.c7mp-service-player.is-music .pocket-screen.is-spotify-playlist{height:min(560px,calc(100dvh - 120px))!important}.music-player.c7mp-service-player .pocket-device{max-height:calc(100dvh - 24px)}}
   `;
   document.head.appendChild(styles);
 
@@ -78,7 +84,7 @@
     const uri = input.match(/^spotify:(track|album|playlist|episode|show):([A-Za-z0-9]+)$/i);
     if (uri) return `https://open.spotify.com/embed/${uri[1].toLowerCase()}/${uri[2]}?utm_source=generator&theme=0`;
     if (url.hostname.toLowerCase() !== "open.spotify.com") return null;
-    const match = url.pathname.match(/^\/(?:intl-[a-z]{2}\/)?(track|album|playlist|episode|show)\/([A-Za-z0-9]+)\/?$/i);
+    const match = url.pathname.match(/^\/(?:intl-[a-z]{2}\/)?(?:embed\/)?(track|album|playlist|episode|show)\/([A-Za-z0-9]+)\/?$/i);
     if (!match) return null;
     return `https://open.spotify.com/embed/${match[1].toLowerCase()}/${match[2]}?utm_source=generator&theme=0`;
   }
@@ -123,6 +129,15 @@
   }
 
   function setEmbed(frameWrap, external, embedUrl, link, service) {
+    const playlist = service === "spotify" && /\/embed\/playlist\//.test(embedUrl);
+    frameWrap.classList.toggle("is-spotify-playlist", playlist);
+    const screen = frameWrap.closest(".pocket-screen") || document.querySelector(".pocket-screen");
+    screen?.classList.toggle("is-spotify-playlist", playlist);
+    const panel = frameWrap.closest(".c7mp-panel");
+    const player = document.querySelector("[data-music-player]");
+    if (panel && player) {
+      requestAnimationFrame(() => positionPanel(panel, player, document.querySelector(".pocket-screen")));
+    }
     const frame = document.createElement("iframe");
     frame.className = "c7mp-frame";
     frame.title = `${serviceNames[service]} music player`;
@@ -146,8 +161,27 @@
     }
   }
 
-  function installPanel(screen) {
-    if (screen.querySelector(".c7mp-panel")) return;
+  function positionPanel(panel, player, screen) {
+    if (!screen || !player.classList.contains("is-open") || !player.classList.contains("is-music")) {
+      panel.classList.add("is-detached");
+      for (const property of ["position", "inset", "top", "left", "width", "height"]) {
+        panel.style.removeProperty(property);
+      }
+      return;
+    }
+
+    panel.classList.remove("is-detached");
+    const bounds = screen.getBoundingClientRect();
+    panel.style.position = "fixed";
+    panel.style.inset = "auto";
+    panel.style.top = `${bounds.top + 43}px`;
+    panel.style.left = `${bounds.left}px`;
+    panel.style.width = `${bounds.width}px`;
+    panel.style.height = `${Math.max(0, bounds.height - 43)}px`;
+  }
+
+  function installPanel(screen, player) {
+    if (document.querySelector(".c7mp-panel")) return;
     const panel = document.createElement("section");
     panel.className = "c7mp-panel";
     panel.setAttribute("aria-label", "Play music from another service");
@@ -188,7 +222,7 @@
     input.value = savedLink;
     const hint = document.createElement("p");
     hint.className = "c7mp-hint";
-    hint.textContent = "Official embeds need no API key. Sign-in, playback, and availability depend on each service.";
+    hint.textContent = "Official embeds need no API key. Spotify may require sign-in, and its playback limits still apply.";
     form.append(controls, input, hint);
 
     const status = document.createElement("div");
@@ -225,15 +259,36 @@
     });
 
     panel.append(header, form, status, frameWrap, external);
-    screen.appendChild(panel);
+    document.body.appendChild(panel);
+    positionPanel(panel, player, screen);
   }
+
+  let observedPlayer = null;
+  let playerObserver = null;
 
   function install() {
     const player = document.querySelector("[data-music-player]");
     if (!player) return;
     player.classList.add("c7mp-service-player");
+    if (player !== observedPlayer) {
+      playerObserver?.disconnect();
+      observedPlayer = player;
+      playerObserver = new MutationObserver(install);
+      playerObserver.observe(player, { attributes: true, attributeFilter: ["class"] });
+    }
     const screen = player.querySelector(".pocket-screen");
-    if (screen) installPanel(screen);
+    let panel = document.querySelector(".c7mp-panel");
+    if (screen && !panel) {
+      installPanel(screen, player);
+      panel = document.querySelector(".c7mp-panel");
+    }
+    if (panel) {
+      screen?.classList.toggle(
+        "is-spotify-playlist",
+        Boolean(panel.querySelector(".c7mp-frame-wrap.is-spotify-playlist")),
+      );
+      positionPanel(panel, player, screen);
+    }
 
     const pocketButton = document.querySelector(".top-pocket");
     if (pocketButton) {
@@ -243,5 +298,6 @@
   }
 
   new MutationObserver(install).observe(document.documentElement, { childList: true, subtree: true });
+  window.addEventListener("resize", install);
   install();
 })();

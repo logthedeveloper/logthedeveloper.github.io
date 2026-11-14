@@ -14,7 +14,7 @@ Open [http://localhost:8000](http://localhost:8000). In Codespaces, forward port
 
 ## Music in the game
 
-Open the Pocket from the music/chat control in the game, choose a music service, and paste a YouTube, YouTube Music, Spotify, or SoundCloud song or playlist link. The service's official embedded player plays it in the Pocket, so Cork7 does not need local soundtrack files or API keys. Playback, sign-in, and availability are controlled by each service. The selected link is saved in the current browser.
+Open the Pocket from the music/chat control in the game, choose a music service, and paste a YouTube, YouTube Music, Spotify, or SoundCloud song or playlist link. Spotify playlists use the full-height Spotify embed, and playback continues if you close the Pocket. Spotify may require sign-in; track length and availability are controlled by Spotify. The selected link is saved in the current browser.
 
 ## Publishing in-game updates
 
