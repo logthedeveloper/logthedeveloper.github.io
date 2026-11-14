@@ -274,7 +274,11 @@
       playerObserver?.disconnect();
       observedPlayer = player;
       playerObserver = new MutationObserver(install);
-      playerObserver.observe(player, { attributes: true, attributeFilter: ["class"] });
+      playerObserver.observe(player, {
+        attributes: true,
+        attributeFilter: ["class"],
+        childList: true,
+      });
     }
     const screen = player.querySelector(".pocket-screen");
     let panel = document.querySelector(".c7mp-panel");
@@ -297,7 +301,20 @@
     }
   }
 
-  new MutationObserver(install).observe(document.documentElement, { childList: true, subtree: true });
+  new MutationObserver((records) => {
+    if (observedPlayer?.isConnected) return;
+    for (const record of records) {
+      for (const node of record.addedNodes) {
+        if (
+          node.nodeType === 1 &&
+          (node.matches("[data-music-player]") || node.querySelector("[data-music-player]"))
+        ) {
+          install();
+          return;
+        }
+      }
+    }
+  }).observe(document.documentElement, { childList: true, subtree: true });
   window.addEventListener("resize", install);
   install();
 })();
