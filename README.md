@@ -13,7 +13,7 @@ This repository contains the front-end assets for the Cork7 experience:
 - Keep `models/`, `grabs/`, `images/mountain-map/`, and the Meshopt decoder in `js/`; the 3D scene, rider animations, and responsive map need them.
 - If assets are missing or a browser shows an empty startup image, the bundled fallback onboarding folder ensures the page still loads correctly.
 - Guest accounts save the rider name and progress on the current device only. They do not sync across devices and can be lost if the browser's site data is cleared; online account features still require signing in.
-- Password recovery can stay in the app: configure the Supabase Auth **Reset Password** email template to show `{{ .Token }}` as a code instead of linking to `{{ .ConfirmationURL }}`. The user enters that code on the recovery form with their new password. Recovery still requires access to the account email; the app does not send the email itself.
+- Signed-in email/password accounts can change their password from **Settings → Account** by confirming their current password; this does not require checking email. If a user is locked out and has forgotten their password, recovery still requires access to the account email for verification. Configure the Supabase Auth **Reset Password** email template to show `{{ .Token }}` as a code so users can enter it in the in-app recovery form without opening a link.
 
 ## Troubleshooting
 
