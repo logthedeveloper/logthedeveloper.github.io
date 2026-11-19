@@ -2,16 +2,6 @@
 
 Cork7 is a static browser game. Its HTML, styles, JavaScript bundles, and game assets are served directly; there is no package installation or build step in this repository.
 
-## Run locally
-
-In VS Code, press **F5** and choose **Launch Cork7**. Or start a static server from the repository root:
-
-```bash
-python3 -m http.server 8000 --bind 0.0.0.0
-```
-
-Open [http://localhost:8000](http://localhost:8000). In Codespaces, forward port `8000` from the **Ports** tab and open its forwarded URL. If the port is busy, run `python3 -m http.server 8001 --bind 0.0.0.0` and open `http://localhost:8001`.
-
 ## Music in the game
 
 Open the Pocket from the music/chat control in the game, choose a music service, and paste a YouTube, YouTube Music, Spotify, or SoundCloud song or playlist link. Spotify playlists use the full-height Spotify embed, and playback continues if you close the Pocket. Spotify may require sign-in; track length and availability are controlled by Spotify. The selected link is saved in the current browser.
